@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Treasury News Monitor</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #07111f;
+      color: white;
+    }
+
+    header {
+      padding: 30px 20px;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 36px;
+    }
+
+    .sub {
+      color: #9fb0c5;
+    }
+
+    .status {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      background: #123b28;
+      color: #55e58a;
+      font-size: 13px;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: auto;
+      padding: 0 20px 40px;
+    }
+
+    .latest {
+      background: #10233a;
+      border: 1px solid #294967;
+      border-radius: 18px;
+      padding: 25px;
+      margin-bottom: 25px;
+    }
+
+    .latest h2 {
+      margin-top: 8px;
+    }
+
+    .news {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .card {
+      background: #0c192a;
+      border: 1px solid #203852;
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .card h3 {
+      line-height: 1.4;
+    }
+
+    .card p {
+      color: #91a5bb;
+      line-height: 1.5;
+    }
+
+    .card a {
+      color: #9ed2ff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .time {
+      color: #71869d;
+      font-size: 12px;
+    }
+
+    @media(max-width: 800px) {
+      .news {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>🏛️ Treasury News Monitor</h1>
+  <p class="sub">
+    U.S. Treasury announcements — automatically updating
+  </p>
+
+  <div class="status">
+    🟢 LIVE • Auto Updating
+  </div>
+</header>
+
+<main>
+
+  <section class="latest">
+    <small>LATEST ANNOUNCEMENT</small>
+    <h2 id="latestTitle">Loading Treasury news...</h2>
+    <p id="latestTime"></p>
+  </section>
+
+  <h2>Recent Treasury News</h2>
+
+  <section id="news" class="news"></section>
+
+</main>
+
+<script>
+
+async function loadNews() {
+
+  try {
+
+    const response = await fetch("/api/news", {
+      cache: "no-store"
+    });
+
+    const data = await response.json();
+
+    const news = data.items || [];
+
+    if (!news.length) {
+      document.getElementById("latestTitle").textContent =
+        "No announcements available";
+      return;
+    }
+
+    document.getElementById("latestTitle").textContent =
+      news[0].title;
+
+    document.getElementById("latestTime").textContent =
+      formatDate(news[0].date);
+
+    const container = document.getElementById("news");
+
+    container.innerHTML = "";
+
+    news.forEach(item => {
+
+      const card = document.createElement("article");
+
+      card.className = "card";
+
+      card.innerHTML = `
+        <div class="time">
+          ${formatDate(item.date)}
+        </div>
+
+        <h3>${escapeHTML(item.title)}</h3>
+
+        <p>
+          ${escapeHTML(
+            item.description ||
+            "Open the official Treasury announcement for details."
+          )}
+        </p>
+
+        <a href="${item.link}"
+           target="_blank"
+           rel="noopener">
+          Read Official Announcement →
+        </a>
+      `;
+
+      container.appendChild(card);
+
+    });
+
+  } catch (error) {
+
+    document.getElementById("latestTitle").textContent =
+      "Waiting for Treasury data...";
+
+  }
+
+}
+
+function formatDate(date) {
+
+  if (!date) return "";
+
+  const d = new Date(date);
+
+  if (isNaN(d)) return date;
+
+  return d.toLocaleString();
+
+}
+
+function escapeHTML(text) {
+
+  return String(text).replace(/[&<>"']/g, function(char) {
+
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[char];
+
+  });
+
+}
+
+loadNews();
+
+/* Automatically check for new news every 30 seconds */
+setInterval(loadNews, 30000);
+
+</script>
+
+</body>
+</html>
