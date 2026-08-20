@@ -1,0 +1,7 @@
+{
+  "name": "treasury-news-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^5.1.0", "rss-parser": "^3.13.0" }
+}
